@@ -5,6 +5,7 @@ from tkinter import scrolledtext     # Usamos scrolledtext para caso tenhamos lo
 from bs4 import BeautifulSoup        # Usamos BeautifulSoup para ler os dados do Arquivo HTML.
 import glob                          # Usamos glob para localizar os arquivos HTML.  
 import subprocess                    # Usamos subprocess para executar o comando no CMD.
+import os                            # Usamos os para poder navegar pelo windows.
 
 def iniciar_diagnostico():
     
@@ -13,6 +14,14 @@ def iniciar_diagnostico():
 
     label_status.pack(pady=10)
     label_status.config(text="Iniciando o diagnóstico...")
+
+    try:
+        # Aqui ele vai executar o comando no CMD, o comando utilizado é o "/batteryreport"
+        subprocess.run(["powercfg", "/batteryreport"], check=True)
+    except subprocess.CalledProcessError as e:
+        # Se ocorrer algum erro durante a execução do comando, exibe uma mensagem de erro.
+        messagebox.showerror("Erro", f"Erro ao gerar o relatório: {e}")
+        return
     
     janela.after(2000, mostrar_resultado) 
     
@@ -20,8 +29,21 @@ def mostrar_resultado():
     
     label_status.pack_forget()
 
+    caminho_relatorio = os.path.expanduser("~\\battery-report.html")
+
+    if not os.path.exists(caminho_relatorio):
+        texto_resultado.pack(pady=20)
+        texto_resultado.insert(tk.END, "Relatório não encontrado. Execute o diagnóstico novamente.", "center")
+        return
+    
+    with open(caminho_relatorio, 'r', encoding='utf-8') as f:
+        soup = BeautifulSoup(f, 'html.parser')
+
+    titulo = soup.title.string if soup.title else "Relatório sem título"
+
     texto_resultado.pack(pady=20)
-    texto_resultado.insert(tk.END, "Diagnóstico concluído!\nResultados aparecerão aqui:\n", "center")
+    texto_resultado.insert(tk.END, f"Diagnóstico concluído!\n{titulo}:\n\n", "center")
+    texto_resultado.insert(tk.END, "Relatório de gerado e analisado com sucesso!\n\n", "center")
 
 
     # Configuração da interface gráfica.
