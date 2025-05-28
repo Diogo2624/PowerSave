@@ -87,6 +87,34 @@ def mostrar_resultado(caminho_relatorio):
 
     label_status.config(text="Diagnóstico concluído!", fg="green", font=("Arial", 18, "bold"))
 
+def extrair_resultados(soup):                #Essa função vai extrair os dados necessários do relatório HTML.
+    
+    numero_ciclos = "Não encontrado"
+    capacidade_design = "Não encontrado"
+    capacidade_atual = "Não encontrado"
+
+    tabelas = soup.find_all('table')
+
+    # Aqui ele busca no relatório HTML as informações da capacidade de carga de fabrica e a capacidade de carga atual.
+    for tabela in tabelas:
+        if "installed batteries" in tabela.text or "Bateria instaladas" in tabela.text:
+            linhas = tabela.find_all('tr')
+            for linha in linhas:
+                if "DESIGN CAPACITY" in linha.text or "Capacidade de projeto" in linha.text:
+                    capacidade_design = linha.find_all('td')[-1].text.strip()
+                if "FULL CHARGE CAPACITY" in linha.text or "Capacidade máxima de carga" in linha.text:
+                    capacidade_atual = linha.find_all('td')[-1].text.strip()
+        
+        # Aqui ele busca o número de ciclos da bateria.
+        if "Battery usage" in tabela.text or "Uso da bateria" in tabela.text:
+            linhas = tabela.find_all('tr')
+            for linha in linhas:
+                if "Cycle Count" in linha.text or "Contagem de ciclos" in linha.text:
+                    numero_ciclos = linha.find_all('td')[-1].text.strip()
+        
+    return numero_ciclos, capacidade_design, capacidade_atual
+
+
 
 # Configuração da interface gráfica.
 
