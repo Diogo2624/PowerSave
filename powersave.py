@@ -122,7 +122,7 @@ def extrair_resultados(soup):                #Essa função vai extrair os dados
 
 janela = tk.Tk()
 janela.title("PowerSave")
-janela.geometry("600x400")
+janela.geometry("800x500")
 janela.configure(bg="#2f3136")
 
 # icone da janela.
@@ -130,12 +130,12 @@ janela.iconbitmap("powersave.ico")
 
 # Configuração da logo do programa.
 imagem_logo = Image.open("logo.png")
-imagem_logo = imagem_logo.resize((100, 100))
+imagem_logo = imagem_logo.resize((280, 280))
 imagem_logo = ImageTk.PhotoImage(imagem_logo)
 
 # Posicionando a logo.
-label_imagem = tk.Label(janela, image=imagem_logo)
-label_imagem.pack(pady=10)
+label_imagem = tk.Label(janela, image=imagem_logo, bg="#2f3136")
+label_imagem.pack(pady=2)
 
 # Configuração do botão para iniciar o diagnóstico.
 
@@ -144,7 +144,7 @@ botao_iniciar = tk.Button(janela, text="Iniciar Diagnóstico",
                           command=iniciar_diagnostico, 
                           font=("Arial", 15, "bold"))
 
-botao_iniciar.pack(pady=10)
+botao_iniciar.pack(pady=2)
 
 # Configurando a área do resultado.
 
