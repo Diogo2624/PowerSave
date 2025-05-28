@@ -9,6 +9,7 @@ import subprocess                    # Usamos subprocess para executar o comando
 import os                            # Usamos os para poder navegar pelo windows.
 import itertools                     # Vamos usar o itertools para criar uma barra de carregamento do progresso.
 from tkinter import ttk              # Usamos ttk para criar uma barra de carregamento.
+from PIL import Image, ImageTk       # Utilizando PIL para colocar a logo do programa, e também para uma melhor qualidade de imagem.
 
 spinner = itertools.cycle(['|', '/', '-', '\\'])
 animando = False
@@ -30,6 +31,7 @@ def iniciar_diagnostico():
 
     botao_iniciar.config(state=tk.DISABLED)     # Após o clique, o botão é desativado para evitar erros.
     botao_iniciar.pack_forget()
+    label_imagem.pack_forget()        # Esconde a logo do programa.
     
     barra_progresso.pack(pady=10)
     barra_progresso.start(10)
@@ -97,7 +99,7 @@ def extrair_resultados(soup):                #Essa função vai extrair os dados
 
     # Aqui ele busca no relatório HTML as informações da capacidade de carga de fabrica e a capacidade de carga atual.
     for tabela in tabelas:
-        if "installed batteries" in tabela.text or "Bateria instaladas" in tabela.text:
+        if "installed batteries" in tabela.text or "bateria instaladas" in tabela.text.lower():
             linhas = tabela.find_all('tr')
             for linha in linhas:
                 if "DESIGN CAPACITY" in linha.text or "Capacidade de projeto" in linha.text:
@@ -123,6 +125,18 @@ janela.title("PowerSave")
 janela.geometry("600x400")
 janela.configure(bg="#2f3136")
 
+# icone da janela.
+janela.iconbitmap("powersave.ico")
+
+# Configuração da logo do programa.
+imagem_logo = Image.open("logo.png")
+imagem_logo = imagem_logo.resize((100, 100))
+imagem_logo = ImageTk.PhotoImage(imagem_logo)
+
+# Posicionando a logo.
+label_imagem = tk.Label(janela, image=imagem_logo)
+label_imagem.pack(pady=10)
+
 # Configuração do botão para iniciar o diagnóstico.
 
 botao_iniciar = tk.Button(janela, text="Iniciar Diagnóstico", 
@@ -130,7 +144,7 @@ botao_iniciar = tk.Button(janela, text="Iniciar Diagnóstico",
                           command=iniciar_diagnostico, 
                           font=("Arial", 15, "bold"))
 
-botao_iniciar.place(relx=0.5, rely=0.5, anchor='center')
+botao_iniciar.pack(pady=10)
 
 # Configurando a área do resultado.
 
