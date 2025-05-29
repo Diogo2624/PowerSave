@@ -31,7 +31,8 @@ def iniciar_diagnostico():
 
     botao_iniciar.config(state=tk.DISABLED)     # Após o clique, o botão é desativado para evitar erros.
     botao_iniciar.pack_forget()
-    label_imagem.pack_forget()        # Esconde a logo do programa.
+    label_imagem.pack_forget()
+    label_texto.pack_forget()        # Esconde a logo do programa.
     
     barra_progresso.pack(pady=10)
     barra_progresso.start(10)
@@ -122,7 +123,7 @@ def extrair_resultados(soup):                #Essa função vai extrair os dados
 
 janela = tk.Tk()
 janela.title("PowerSave")
-janela.geometry("800x500")
+janela.geometry("1000x600")
 janela.configure(bg="#2f3136")
 
 # icone da janela.
@@ -130,21 +131,39 @@ janela.iconbitmap("powersave.ico")
 
 # Configuração da logo do programa.
 imagem_logo = Image.open("logo.png")
-imagem_logo = imagem_logo.resize((280, 280))
+imagem_logo = imagem_logo.resize((330, 165))
 imagem_logo = ImageTk.PhotoImage(imagem_logo)
 
 # Posicionando a logo.
 label_imagem = tk.Label(janela, image=imagem_logo, bg="#2f3136")
-label_imagem.pack(pady=2)
+label_imagem.pack(pady=50)
+
+# Configuração do texto que fica entre o botão e a logo.
+
+label_texto = tk.Label(janela,
+                       text="Bem-vindo ao PowerSave!",
+                       fg="white",
+                       bg="#2f3136",
+                       font=("Arial", 24, "bold"),
+                       justify="center")
+label_texto.pack(pady=10)
+
+label_texto = tk.Label(janela,
+                       text="Vamos avaliar a saúde da sua bateria?",
+                       fg="white",
+                       bg="#2f3136",
+                       font=("Arial", 15),
+                       justify="center")
+label_texto.pack(pady=1)
 
 # Configuração do botão para iniciar o diagnóstico.
 
 botao_iniciar = tk.Button(janela, text="Iniciar Diagnóstico", 
-                          width=30, height=4, fg="white", bg="#7289da",
+                          width=20, height=3, fg="white", bg="#7289da",
                           command=iniciar_diagnostico, 
                           font=("Arial", 15, "bold"))
 
-botao_iniciar.pack(pady=2)
+botao_iniciar.pack(pady=50)
 
 # Configurando a área do resultado.
 
