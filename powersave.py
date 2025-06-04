@@ -1,5 +1,3 @@
-# Programa Principal
-
 import tkinter as tk                 # Usamos Tkinter para fazer a interface gráfica.
 from tkinter import messagebox       # Usamos messagebox para exibir mensagens ao usuário.
 from tkinter import scrolledtext     # Usamos scrolledtext para caso tenhamos longos resultados.
@@ -21,6 +19,24 @@ def animar_spinner():
         label_status.config(text=f"Iniciando o diagnóstico... {next(spinner)}")
         janela.after(200, animar_spinner) 
 
+# Função para definir os dados da bateria.
+
+def analisar_dados(ciclos, capacidade_projeto, capacidade_maxima):
+    try:
+        ciclos = int(ciclos)
+        capacidade_projeto_valor = int(''.join(filter(str.isdigit, capacidade_projeto)))
+        capacidade_maxima_valor = int(''.join(filter(str.isdigit, capacidade_maxima)))
+        degradacao = capacidade_maxima_valor / capacidade_projeto_valor
+
+        if ciclos >= 40:
+            return ("DESGASTADA", f"Sua bateria está DESGASTADA apresentando muitos ciclos de uso, que significa que a bateria foi muito utilizada. Apresentando um número de ciclos de {ciclos}, normalmente uma bateria saudável tem entre 10 a 40 ciclos, é recomendado fazer a TROCA da bateria.", "orange")
+        elif ciclos < 10 and degradacao < 0.7:
+            return ("DEFEITO DE FABRICAÇÃO", f"Sua bateria aparenta estar com DEFEITO DE FABRICAÇÃO já que ela não apresenta ter sido muito utilizada com número de ciclos de {ciclos}, o ciclo de bateria representa a quantidade de carga e descarga total da bateria, sua bateria foi projetada para suportar {capacidade_projeto} e atualmente está suportando {capacidade_maxima}, o que indica um defeito de fabricação, é recomendado entrar em contato com o fabricante.", "red")
+        else:
+            return ("NORMAL", ".", "green")
+
+    except Exception as e:
+        return ("ERRO", f"Erro na análise dos dados: {e}", "red")
 
 # Função para iniciar o diagnóstico.
 
@@ -87,11 +103,11 @@ def mostrar_resultado(caminho_relatorio):
     texto_resultado.delete(1.0, tk.END) 
     texto_resultado.insert(tk.END, f"Diagnóstico concluído!\n{titulo}:\n\n", "center")
     texto_resultado.insert(tk.END, "Relatório gerado e analisado com sucesso!\n\n", "center")
-
+    
     label_status.config(text="Diagnóstico concluído!", fg="green", font=("Arial", 18, "bold"))
+    analisar_dados(*extrair_resultados(soup))
 
 def extrair_resultados(soup):                #Essa função vai extrair os dados necessários do relatório HTML.
-    
     numero_ciclos = "Não encontrado"
     capacidade_design = "Não encontrado"
     capacidade_atual = "Não encontrado"
@@ -100,7 +116,7 @@ def extrair_resultados(soup):                #Essa função vai extrair os dados
 
     # Aqui ele busca no relatório HTML as informações da capacidade de carga de fabrica e a capacidade de carga atual.
     for tabela in tabelas:
-        if "installed batteries" in tabela.text or "bateria instaladas" in tabela.text.lower():
+        if "installed batteries" in tabela.text or "baterias instaladas" in tabela.text.lower():
             linhas = tabela.find_all('tr')
             for linha in linhas:
                 if "DESIGN CAPACITY" in linha.text or "Capacidade de projeto" in linha.text:
@@ -114,7 +130,11 @@ def extrair_resultados(soup):                #Essa função vai extrair os dados
             for linha in linhas:
                 if "Cycle Count" in linha.text or "Contagem de ciclos" in linha.text:
                     numero_ciclos = linha.find_all('td')[-1].text.strip()
-        
+
+    texto_resultado.insert(tk.END, f"Número de ciclos: {numero_ciclos}\n")
+    texto_resultado.insert(tk.END, f"Capacidade de projeto: {capacidade_design}\n")
+    texto_resultado.insert(tk.END, f"Capacidade atual: {capacidade_atual}\n")
+
     return numero_ciclos, capacidade_design, capacidade_atual
 
 
