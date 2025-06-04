@@ -23,9 +23,16 @@ def animar_spinner():
 
 def analisar_dados(ciclos, capacidade_projeto, capacidade_maxima):
     try:
-        ciclos = int(ciclos)
-        capacidade_projeto_valor = int(''.join(filter(str.isdigit, capacidade_projeto)))
-        capacidade_maxima_valor = int(''.join(filter(str.isdigit, capacidade_maxima)))
+        if ciclos == "Não encontrado" or capacidade_projeto == "Não encontrado" or capacidade_maxima == "Não encontrado":
+            return ("ERRO", "Dados insuficientes para análise: um ou mais valores não foram encontrados.", "red")
+
+        try:
+            ciclos = int(ciclos)
+            capacidade_projeto_valor = int(''.join(filter(str.isdigit, capacidade_projeto)))
+            capacidade_maxima_valor = int(''.join(filter(str.isdigit, capacidade_maxima)))
+        except ValueError as e:
+            return ("ERRO", f"Erro na conversão dos dados: {e}", "red")
+        
         degradacao = capacidade_maxima_valor / capacidade_projeto_valor
 
         if ciclos >= 40:
@@ -107,35 +114,40 @@ def mostrar_resultado(caminho_relatorio):
     label_status.config(text="Diagnóstico concluído!", fg="green", font=("Arial", 18, "bold"))
     analisar_dados(*extrair_resultados(soup))
 
-def extrair_resultados(soup):                #Essa função vai extrair os dados necessários do relatório HTML.
+    numero_ciclos, capacidade_design, capacidade_atual = extrair_resultados(soup)
+
+    status, mensagem, cor = analisar_dados(numero_ciclos, capacidade_design, capacidade_atual)
+
+    texto_resultado.insert(tk.END, f"\nStatus: {status}\n", "center")
+    texto_resultado.insert(tk.END, f"\nMensagem: {mensagem}\n", "center")
+
+    label_status.config(text=f"Diagnóstico: {status}", fg=cor, font=("Arial", 18, "bold"))
+
+def extrair_resultados(soup):
     numero_ciclos = "Não encontrado"
     capacidade_design = "Não encontrado"
     capacidade_atual = "Não encontrado"
 
     tabelas = soup.find_all('table')
 
-    # Aqui ele busca no relatório HTML as informações da capacidade de carga de fabrica e a capacidade de carga atual.
     for tabela in tabelas:
-        if "installed batteries" in tabela.text or "baterias instaladas" in tabela.text.lower():
-            linhas = tabela.find_all('tr')
-            for linha in linhas:
-                if "DESIGN CAPACITY" in linha.text or "Capacidade de projeto" in linha.text:
-                    capacidade_design = linha.find_all('td')[-1].text.strip()
-                if "FULL CHARGE CAPACITY" in linha.text or "Capacidade máxima de carga" in linha.text:
-                    capacidade_atual = linha.find_all('td')[-1].text.strip()
-        
-        # Aqui ele busca o número de ciclos da bateria.
-        if "Battery usage" in tabela.text or "Uso da bateria" in tabela.text:
-            linhas = tabela.find_all('tr')
-            for linha in linhas:
-                if "Cycle Count" in linha.text or "Contagem de ciclos" in linha.text:
-                    numero_ciclos = linha.find_all('td')[-1].text.strip()
+        linhas = tabela.find_all('tr')
+        for linha in linhas:
+            colunas = linha.find_all('td')
+            if len(colunas) >= 2:
+                chave = colunas[0].get_text(strip=True).upper()
+                valor = colunas[1].get_text(strip=True)
+
+                if "DESIGN CAPACITY" in chave:
+                    capacidade_design = valor
+                elif "FULL CHARGE CAPACITY" in chave:
+                    capacidade_atual = valor
+                elif "CYCLE COUNT" in chave:
+                    numero_ciclos = valor
 
     texto_resultado.insert(tk.END, f"Número de ciclos: {numero_ciclos}\n")
     texto_resultado.insert(tk.END, f"Capacidade de projeto: {capacidade_design}\n")
     texto_resultado.insert(tk.END, f"Capacidade atual: {capacidade_atual}\n")
-
-    return numero_ciclos, capacidade_design, capacidade_atual
 
 
 
