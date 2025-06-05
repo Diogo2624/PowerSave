@@ -82,24 +82,22 @@ def iniciar_diagnostico():
     janela.after(2000, lambda: mostrar_resultado(caminho_relatorio)) 
     
 def mostrar_resultado(caminho_relatorio):
-
     global animando
-    animando = False       # Para a função do spinner.
-    
+    animando = False  # Para a função do spinner.
+
     barra_progresso.stop()
     barra_progresso.pack_forget()
 
     # Verifica se o relatório foi gerado.
-
     if not os.path.exists(caminho_relatorio):
         texto_resultado.pack(pady=20)
         texto_resultado.delete(1.0, tk.END)
         texto_resultado.insert(tk.END, "Relatório não encontrado. Execute o diagnóstico novamente.", "center")
         return
+
     try:
         with open(caminho_relatorio, 'r', encoding='utf-8') as f:
             soup = BeautifulSoup(f, 'html.parser')
-    
     except Exception as e:
         messagebox.showerror("Erro", f"Erro ao ler o relatório: {e}")
         return
@@ -107,17 +105,25 @@ def mostrar_resultado(caminho_relatorio):
     titulo = soup.title.string if soup.title else "Relatório sem título"
 
     texto_resultado.pack(pady=20)
-    texto_resultado.delete(1.0, tk.END) 
+    texto_resultado.delete(1.0, tk.END)
     texto_resultado.insert(tk.END, f"Diagnóstico concluído!\n{titulo}:\n\n", "center")
     texto_resultado.insert(tk.END, "Relatório gerado e analisado com sucesso!\n\n", "center")
-    
-    label_status.config(text="Diagnóstico concluído!", fg="green", font=("Arial", 18, "bold"))
-    analisar_dados(*extrair_resultados(soup))
 
+    label_status.config(text="Diagnóstico concluído!", fg="green", font=("Arial", 18, "bold"))
+
+    # Extrai os dados
     numero_ciclos, capacidade_design, capacidade_atual = extrair_resultados(soup)
 
+    # Verifica se a extração foi bem-sucedida
+    if "Não encontrado" in (numero_ciclos, capacidade_design, capacidade_atual):
+        texto_resultado.insert(tk.END, "\nDados incompletos ou inválidos extraídos do relatório.\n", "center")
+        label_status.config(text="Erro na extração", fg="red", font=("Arial", 18, "bold"))
+        return
+
+    # Analisa os dados
     status, mensagem, cor = analisar_dados(numero_ciclos, capacidade_design, capacidade_atual)
 
+    # Mostra o resultado
     texto_resultado.insert(tk.END, f"\nStatus: {status}\n", "center")
     texto_resultado.insert(tk.END, f"\nMensagem: {mensagem}\n", "center")
 
@@ -148,6 +154,8 @@ def extrair_resultados(soup):
     texto_resultado.insert(tk.END, f"Número de ciclos: {numero_ciclos}\n")
     texto_resultado.insert(tk.END, f"Capacidade de projeto: {capacidade_design}\n")
     texto_resultado.insert(tk.END, f"Capacidade atual: {capacidade_atual}\n")
+
+    return numero_ciclos, capacidade_design, capacidade_atual
 
 
 
