@@ -114,13 +114,13 @@ def mostrar_resultado(caminho_relatorio):
     # Extrai os dados
     numero_ciclos, capacidade_design, capacidade_atual = extrair_resultados(soup)
 
-    # Verifica se a extração foi bem-sucedida
+    
     if "Não encontrado" in (numero_ciclos, capacidade_design, capacidade_atual):
         texto_resultado.insert(tk.END, "\nDados incompletos ou inválidos extraídos do relatório.\n", "center")
         label_status.config(text="Erro na extração", fg="red", font=("Arial", 18, "bold"))
         return
 
-    # Analisa os dados
+    
     status, mensagem, cor = analisar_dados(numero_ciclos, capacidade_design, capacidade_atual)
 
     # Mostra o resultado
