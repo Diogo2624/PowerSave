@@ -36,11 +36,11 @@ def analisar_dados(ciclos, capacidade_projeto, capacidade_maxima):
         degradacao = capacidade_maxima_valor / capacidade_projeto_valor
 
         if ciclos >= 40:
-            return ("DESGASTADA", f"Sua bateria está DESGASTADA apresentando muitos ciclos de uso, que significa que a bateria foi muito utilizada. Apresentando um número de ciclos de {ciclos}, normalmente uma bateria saudável tem entre 10 a 40 ciclos, é recomendado fazer a TROCA da bateria.", "orange")
+            return ("DESGASTADA", f"Sua bateria está DESGASTADA apresentando muitos ciclos de uso, que significa que a\n bateria foi muito utilizada. Apresentando um número de ciclos de {ciclos}, normalmente uma\n bateria saudável tem entre 10 a 40 ciclos, é recomendado fazer a TROCA da bateria.", "orange")
         elif ciclos < 10 and degradacao < 0.7:
-            return ("DEFEITO DE FABRICAÇÃO", f"Sua bateria aparenta estar com DEFEITO DE FABRICAÇÃO já que ela não apresenta ter sido muito utilizada com número de ciclos de {ciclos}, o ciclo de bateria representa a quantidade de carga e descarga total da bateria, sua bateria foi projetada para suportar {capacidade_projeto} e atualmente está suportando {capacidade_maxima}, o que indica um defeito de fabricação, é recomendado entrar em contato com o fabricante.", "red")
+            return ("DEFEITO DE FABRICAÇÃO", f"Sua bateria aparenta estar com DEFEITO DE FABRICAÇÃO\n já que ela não apresenta ter sido muito utilizada com número de ciclos de {ciclos}, o ciclo de bateria\n representa a quantidade de carga e descarga total da bateria,\n sua bateria foi projetada para suportar {capacidade_projeto} \ne atualmente está suportando {capacidade_maxima}, o que indica um defeito de fabricação,\n é recomendado entrar em contato com o fabricante.", "red")
         else:
-            return ("NORMAL", ".", "green")
+            return ("NORMAL", f"A saúde da sua bateria é considerada NORMAL.\n Com {ciclos} ciclos de uso, ela está operando dentro dos parâmetros esperados.", "green")
 
     except Exception as e:
         return ("ERRO", f"Erro na análise dos dados: {e}", "red")
@@ -88,11 +88,15 @@ def mostrar_resultado(caminho_relatorio):
     barra_progresso.stop()
     barra_progresso.pack_forget()
 
-    # Verifica se o relatório foi gerado.
+    # PASSO 1: HABILITA a edição para que o programa possa inserir o texto.
+    texto_resultado.config(state=tk.NORMAL)
+
+    # Limpa qualquer texto anterior.
+    texto_resultado.delete(1.0, tk.END)
+
     if not os.path.exists(caminho_relatorio):
-        texto_resultado.pack(pady=20)
-        texto_resultado.delete(1.0, tk.END)
         texto_resultado.insert(tk.END, "Relatório não encontrado. Execute o diagnóstico novamente.", "center")
+        texto_resultado.config(state=tk.DISABLED)
         return
 
     try:
@@ -100,34 +104,40 @@ def mostrar_resultado(caminho_relatorio):
             soup = BeautifulSoup(f, 'html.parser')
     except Exception as e:
         messagebox.showerror("Erro", f"Erro ao ler o relatório: {e}")
+        texto_resultado.config(state=tk.DISABLED)
         return
 
     titulo = soup.title.string if soup.title else "Relatório sem título"
 
     texto_resultado.pack(pady=20)
-    texto_resultado.delete(1.0, tk.END)
+    
     texto_resultado.insert(tk.END, f"Diagnóstico concluído!\n{titulo}:\n\n", "center")
     texto_resultado.insert(tk.END, "Relatório gerado e analisado com sucesso!\n\n", "center")
 
     label_status.config(text="Diagnóstico concluído!", fg="green", font=("Arial", 18, "bold"))
 
-    # Extrai os dados
+    # Chama a função de extrair resultados.
     numero_ciclos, capacidade_design, capacidade_atual = extrair_resultados(soup)
-
     
+    # Insere os dados extraídos na caixa de texto.
+    texto_resultado.insert(tk.END, f"Número de ciclos: {numero_ciclos}\n")
+    texto_resultado.insert(tk.END, f"Capacidade de projeto: {capacidade_design}\n")
+    texto_resultado.insert(tk.END, f"Capacidade atual: {capacidade_atual}\n")
+
     if "Não encontrado" in (numero_ciclos, capacidade_design, capacidade_atual):
         texto_resultado.insert(tk.END, "\nDados incompletos ou inválidos extraídos do relatório.\n", "center")
         label_status.config(text="Erro na extração", fg="red", font=("Arial", 18, "bold"))
+        texto_resultado.config(state=tk.DISABLED)
         return
 
-    
     status, mensagem, cor = analisar_dados(numero_ciclos, capacidade_design, capacidade_atual)
 
-    # Mostra o resultado
     texto_resultado.insert(tk.END, f"\nStatus: {status}\n", "center")
-    texto_resultado.insert(tk.END, f"\nMensagem: {mensagem}\n", "center")
+    texto_resultado.insert(tk.END, f"\n{mensagem}\n", "center")
 
     label_status.config(text=f"Diagnóstico: {status}", fg=cor, font=("Arial", 18, "bold"))
+
+    texto_resultado.config(state=tk.DISABLED)
 
 def extrair_resultados(soup):
     numero_ciclos = "Não encontrado"
@@ -150,10 +160,6 @@ def extrair_resultados(soup):
                     capacidade_atual = valor
                 elif "CYCLE COUNT" in chave:
                     numero_ciclos = valor
-
-    texto_resultado.insert(tk.END, f"Número de ciclos: {numero_ciclos}\n")
-    texto_resultado.insert(tk.END, f"Capacidade de projeto: {capacidade_design}\n")
-    texto_resultado.insert(tk.END, f"Capacidade atual: {capacidade_atual}\n")
 
     return numero_ciclos, capacidade_design, capacidade_atual
 
@@ -209,8 +215,8 @@ botao_iniciar.pack(pady=50)
 
 texto_resultado = scrolledtext.ScrolledText(
     janela, 
-    width=60, 
-    height=15, 
+    width=80, 
+    height=35, 
     font=("Arial", 15, "bold"),
     bg="#23272a",
     fg="white",
