@@ -40,7 +40,7 @@ def analisar_dados(ciclos, capacidade_projeto, capacidade_maxima):
         elif ciclos < 10 and degradacao < 0.7:
             return ("DEFEITO DE FABRICAÇÃO", f"Sua bateria aparenta estar com DEFEITO DE FABRICAÇÃO\n já que ela não apresenta ter sido muito utilizada com número de ciclos de {ciclos}, o ciclo de bateria\n representa a quantidade de carga e descarga total da bateria,\n sua bateria foi projetada para suportar {capacidade_projeto} \ne atualmente está suportando {capacidade_maxima}, o que indica um defeito de fabricação,\n é recomendado entrar em contato com o fabricante.", "red")
         else:
-            return ("NORMAL", f"A saúde da sua bateria é considerada NORMAL.\n Com {ciclos} ciclos de uso, ela está operando dentro dos parâmetros esperados.", "green")
+            return ("NORMAL", f"A saúde da sua bateria é considerada NORMAL.\n Com {ciclos} ciclos de uso, ela está operando dentro dos parâmetros esperados para uma bateria em boas condições.\n Sua capacidade máxima atual é de {capacidade_maxima}.", "green")
 
     except Exception as e:
         return ("ERRO", f"Erro na análise dos dados: {e}", "red")
@@ -88,10 +88,7 @@ def mostrar_resultado(caminho_relatorio):
     barra_progresso.stop()
     barra_progresso.pack_forget()
 
-    # PASSO 1: HABILITA a edição para que o programa possa inserir o texto.
     texto_resultado.config(state=tk.NORMAL)
-
-    # Limpa qualquer texto anterior.
     texto_resultado.delete(1.0, tk.END)
 
     if not os.path.exists(caminho_relatorio):
@@ -111,15 +108,13 @@ def mostrar_resultado(caminho_relatorio):
 
     texto_resultado.pack(pady=20)
     
-    texto_resultado.insert(tk.END, f"Diagnóstico concluído!\n{titulo}:\n\n", "center")
-    texto_resultado.insert(tk.END, "Relatório gerado e analisado com sucesso!\n\n", "center")
+    texto_resultado.insert(tk.END, f"Diagnóstico concluído!\n{titulo}:\n\n", ("center", "fonte_grande"))
+    texto_resultado.insert(tk.END, "Relatório gerado e analisado com sucesso!\n\n", ("center", "fonte_grande"))
 
     label_status.config(text="Diagnóstico concluído!", fg="green", font=("Arial", 18, "bold"))
 
-    # Chama a função de extrair resultados.
     numero_ciclos, capacidade_design, capacidade_atual = extrair_resultados(soup)
     
-    # Insere os dados extraídos na caixa de texto.
     texto_resultado.insert(tk.END, f"Número de ciclos: {numero_ciclos}\n")
     texto_resultado.insert(tk.END, f"Capacidade de projeto: {capacidade_design}\n")
     texto_resultado.insert(tk.END, f"Capacidade atual: {capacidade_atual}\n")
@@ -132,11 +127,29 @@ def mostrar_resultado(caminho_relatorio):
 
     status, mensagem, cor = analisar_dados(numero_ciclos, capacidade_design, capacidade_atual)
 
-    texto_resultado.insert(tk.END, f"\nStatus: {status}\n", "center")
-    texto_resultado.insert(tk.END, f"\n{mensagem}\n", "center")
+    # Inserimos o texto "Status: " normalmente.
+    texto_resultado.insert(tk.END, "\nStatus: ", "center")
+    
+    # Verificamos o status e aplicamos a tag de cor correspondente APENAS à palavra do status.
+    tag_cor = ""
+    if status == "DESGASTADA":
+        tag_cor = "cor_desgastada"
+    elif status == "NORMAL":
+        tag_cor = "cor_normal"
+    elif status == "DEFEITO DE FABRICAÇÃO":
+        tag_cor = "cor_defeito"
+
+    # Inserimos a palavra do status com a tag de cor e a tag de centralização
+    if tag_cor:
+        texto_resultado.insert(tk.END, status, (tag_cor, "center"))
+    else:
+        # Se for um status inesperado ou de erro, insere sem cor especial
+        texto_resultado.insert(tk.END, status, "center")
+
+    texto_resultado.insert(tk.END, f"\n\n{mensagem}\n", "center")
 
     label_status.config(text=f"Diagnóstico: {status}", fg=cor, font=("Arial", 18, "bold"))
-
+    
     texto_resultado.config(state=tk.DISABLED)
 
 def extrair_resultados(soup):
@@ -224,6 +237,13 @@ texto_resultado = scrolledtext.ScrolledText(
 )
 texto_resultado.tag_configure("center", justify='center')
 
+# Aqui definimos nossas tags de estilo. Damos um nome a cada tag e configuramos suas propriedades (cor do texto e fonte).
+texto_resultado.tag_configure("cor_desgastada", foreground="orange", font=("Arial", 15, "bold"))
+texto_resultado.tag_configure("cor_normal", foreground="#32CD32", font=("Arial", 15, "bold")) 
+texto_resultado.tag_configure("cor_defeito", foreground="red", font=("Arial", 15, "bold"))
+
+# Tag para a fonte dos títulos e mensagens principais.
+texto_resultado.tag_configure("fonte_grande", font=("Arial", 18, "bold"))
 
 # Configurando o label dos status.
 
